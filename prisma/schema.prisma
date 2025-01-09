@@ -1,0 +1,64 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id       Int     @id @default(autoincrement())
+  username String  @unique
+  name     String
+  email    String  @unique
+  password String
+  role     UserRole @default(STUDENT)
+  classId  Int?    // Nullable to allow users without a class
+  class    Class?  @relation(fields: [classId], references: [id])
+  notes    Note[]
+}
+
+model Class {
+  id          Int    @id @default(autoincrement())
+  name        String @unique
+  description String
+  users       User[]
+  notes       Note[]
+}
+
+model Subject {
+  id   Int    @id @default(autoincrement())
+  code String @unique
+  name String
+  notes Note[]
+}
+
+model Note {
+  id          Int       @id @default(autoincrement())
+  title       String
+  description String?
+  content     String
+  subjectId   Int?         // Add a foreign key to Subject
+  subject     Subject?     @relation(fields: [subjectId], references: [id])
+  isVisible   Boolean      @default(false)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  authorId    Int
+  classId     Int?
+  class       Class?       @relation(fields: [classId], references: [id])
+  author      User         @relation(fields: [authorId], references: [id])
+  starred     Boolean?     @default(false)
+}
+
+
+enum UserRole {
+  TEACHER
+  STUDENT
+}
